@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>United States GDP</title>
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- D3 -->
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+
+        <!-- CSS -->
+        <link rel="stylesheet" type="text/css" href="styles/index.css">
+
+    </head>
+    <body id="bicycle_body">
+        <header>
+            <a class="header_link" href="./bar_chart.html">USA GDP</a>
+            <a class="header_link" href="./scatterplot_graph.html">Bicycle Racing Doping</a>
+            <a class="header_link" href="./bar_chart.html">USA GDP</a>
+            <a class="header_link" href="./bar_chart.html">USA GDP</a>
+            <a class="header_link" href="./bar_chart.html">USA GDP</a>
+        </header>
+            <div id="container"></div>
+            <script>
+            document.addEventListener("DOMContentLoaded", () => {
+
+                // Fetch data
+                let dataset = []
+                fetch("https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/cyclist-data.json")
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(el => {
+                            dataset.push(el)
+                        })
+
+                        // Data Visualization
+                        // Variables
+                        const w = 900
+                        const h = 460
+                        const padding = 60
+
+                        const handleDoping = cyclist => {
+                            const doping = cyclist["Doping"]
+                            if (doping == "") {
+                                return ""
+                            }
+                            return `<br><br>${cyclist["Doping"]}`
+                        }
+
+                        // Scales
+                        // X Axis Format
+                        const yearFormat = "%Y"
+
+                        const xScale = d3.scaleTime()
+                            .domain([d3.timeParse(yearFormat)(1993), d3.timeParse(yearFormat)(2016)])
+                            .range([padding, w - padding])
+
+                        // Y Axis Format
+                        const specifier = "%M:%S"
+                        const parsedTime = dataset.map(d => d3.timeParse(specifier)(d["Time"]))
+
+                        const yScale = d3.scaleTime()
+                            .domain(d3.extent(parsedTime).reverse())
+                            .range([h - padding, padding])
+
+                        // Append SVG
+                        const svg = d3.select("#container")
+                            .append("svg")
+                            .attr("width", w)
+                            .attr("height", h)
+
+                        // Title
+                        svg.append("text")
+                            .attr("x", w / 2)
+                            .attr("y", padding - 40)
+                            .attr("text-anchor", "middle")  
+                            .attr("id", "bicycle_title")
+                            .text("Doping in Professional Bicycle Racing")
+                            .attr("fill", "#17252A")
+
+                        // Subtitle
+                        svg.append("text")
+                            .attr("x", w / 2)
+                            .attr("y", padding - 20)
+                            .attr("text-anchor", "middle")  
+                            .attr("id", "bicycle_subtitle")
+                            .text("35 Fastest times up Alpe d'Huez")
+                            .attr("fill", "#2B7A78")
+                        
+                        // Tool Tip
+                        const toolTip = d3.select("#container")
+                            .append("div")
+                            .attr("id", "bicycle_tooltip")
+                            .style("visibility", "hidden")
+                        
+                        // Circle 
+                        svg.selectAll("circle")
+                            .data(dataset)
+                            .enter()
+                            .append("circle")
+                            .attr("cx", d => xScale(d3.timeParse(yearFormat)(d["Year"])))
+                            .attr("cy", d => yScale(d3.timeParse(specifier)(d["Time"])))
+                            .attr("r", d => 5)
+                            .attr("class", "dot")
+                            .attr("data-xvalue", d => d["Year"])
+                            .attr("data-yvalue", d => new Date(d3.timeParse(specifier)(d["Time"])))
+                            .attr("fill", d => {
+                                if (d["Doping"] == "") {
+                                    return "#17252A"
+                                }
+                                return "#3AAFA9"
+                            })
+                            .on("mouseover", d => {
+                                toolTip.html(`${d["Name"]}: ${d["Nationality"]}<br>Year: ${d["Year"]}, Time: ${d["Time"]}${handleDoping(d)}`)
+                                    .attr("data-year", d["Year"])
+                                    .style("left",`${d3.event.pageX}px`)
+                                    .style("top",`${d3.event.pageY}px`)
+                                    .style("visibility", "visible");
+                            })
+                            .on("mouseout", d => {
+                                toolTip.style("visibility", "hidden");
+                            });
+                            
+
+                        // Axis
+                        const xAxis = d3.axisBottom(xScale)
+                        
+                        const yAxis = d3.axisLeft(yScale)
+                            .tickFormat(d => {
+                                return String(d.getMinutes()) + ":" + String(d.getSeconds()).padStart(2, "0")
+                            })
+
+                        svg.append("g")
+                            .attr("transform", "translate(0," + (h - padding) + ")")
+                            .call(xAxis)
+                            .attr("id", "x-axis")
+
+                        svg.append("g")
+                            .attr("transform", "translate(" + padding + ",0)")
+                            .call(yAxis)
+                            .attr("id", "y-axis")
+
+                        // Left Axis Legend
+                        svg.append("text")
+                            .attr("text-anchor", "start")
+                            .attr("transform", "translate("+ (padding - 45) +","+(h/2.5)+")rotate(-90)")
+                            .text("Time in Minutes")
+                            .attr("fill", "#2B7A78")
+
+                        // Doping Legend 
+                        // No doping allegations
+                        svg.append("text")
+                            .attr("text-anchor", "start")
+                            .attr("transform", "translate("+ (w - (padding + 100)) +","+(h/2.5)+")")
+                            .attr("class", "bicycle_legend")
+                            .text("No doping allegations")
+
+                        svg.append("rect")
+                            .attr("x", w - (padding - 40))
+                            .attr("y", h/2.7)
+                            .attr("width", "20") 
+                            .attr("height", "20")
+                            .attr("fill", "#17252A")
+                        
+                        // Doping allegations
+                        svg.append("text")
+                            .attr("text-anchor", "start")
+                            .attr("transform", "translate("+ (w - (padding + 150)) +","+(h/2.2)+")")
+                            .attr("class", "bicycle_legend")
+                            .text("Riders with doping allegations")
+
+                        svg.append("rect")
+                            .attr("x", w - (padding - 40))
+                            .attr("y", h/2.35)
+                            .attr("width", "20") 
+                            .attr("height", "20")
+                            .attr("fill", "#3AAFA9")
+                            
+                    })
+            })
+
+            </script>
+    </body>
+</html>
+
+
+

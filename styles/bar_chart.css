@@ -1,0 +1,36 @@
+#us_gdp_body {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    font-family: "Roboto";
+    background-color: white;
+}
+
+#us_gdp_title {
+    font-size: 26px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.us_gdp_bar {
+    stroke: white;
+    stroke-width: 0;
+}
+
+.us_gdp_bar:hover {
+    fill: white;
+}
+
+#us_gdp_tooltip {
+    position: absolute;
+    bottom: 40vh;
+    background: var(--grey);
+    padding: 5px 25px;
+    margin-left: 30px;
+    box-shadow: 1px 1px 5px 0px black;
+    opacity: 0.85;
+    text-align: center;
+}

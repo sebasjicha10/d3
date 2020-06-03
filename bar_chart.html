@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>United States GDP</title>
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- D3 -->
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+
+        <!-- CSS -->
+        <link rel="stylesheet" type="text/css" href="styles/index.css">
+
+    </head>
+    <body id="us_gdp_body">
+        <header>
+            <a class="header_link" href="./bar_chart.html">USA GDP</a>
+            <a class="header_link" href="./scatterplot_graph.html">Bicycle Racing Doping</a>
+            <a class="header_link" href="./bar_chart.html">USA GDP</a>
+            <a class="header_link" href="./bar_chart.html">USA GDP</a>
+            <a class="header_link" href="./bar_chart.html">USA GDP</a>
+        </header>
+            <div id="container"></div>
+            <script>
+            document.addEventListener("DOMContentLoaded", () => {
+
+                // Fetch data 
+                let dataset = []
+                fetch("https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/GDP-data.json")
+                    .then(response => response.json())
+                    .then(data => {
+                        const statistics = data["data"]
+                        statistics.forEach(el => {
+                            dataset.push(el)
+                        })
+                    
+                        // Data Visualization
+                        // Variables
+                        const w = 900
+                        const h = 460
+                        const padding = 60
+
+                        // Take a date and returns the year + the quarter 
+                        const handleTime = date => {
+                            const year = date.match(/\d+/)
+                            const month = date.match(/-(.*?)-/g).toString().match(/\d+/)
+                            let quarter
+                            if (month == 01) {
+                                quarter = "Q1"
+                            } else if (month == 04) {
+                                quarter = "Q2"
+                            } else if (month == 07) {
+                                quarter = "Q3" 
+                            } else {
+                                quarter = "Q4"   
+                            }
+                            return year + " " + quarter
+                        }
+  
+                        // Scales
+                        const xScale = d3.scaleTime()
+                            .domain([new Date(d3.min(dataset, d => d[0])), new Date(d3.max(dataset, d => d[0]))])
+                            .range([padding, w - padding])
+                              
+                        const yScale = d3.scaleLinear()
+                            .domain([0, d3.max(dataset, d => d[1])])
+                            .range([h - padding, padding])
+
+                        // Append SVG
+                        const svg = d3.select("#container")
+                            .append("svg")
+                            .attr("width", w)
+                            .attr("height", h)
+
+                        // Title
+                        svg.append("text")
+                            .attr("x", w / 2)             
+                            .attr("y", padding - 20)
+                            .attr("text-anchor", "middle")  
+                            .attr("id", "us_gdp_title")
+                            .text("United States GDP")
+                            .attr("fill", "#17252A")
+
+                        // Tool Tip
+                        const toolTip = d3.select("#container")
+                            .append("div")
+                            .attr("id", "us_gdp_tooltip")
+                            .style("visibility", "hidden")
+                            
+                        // Rectangle
+                        svg.selectAll("rect")
+                            .data(dataset)
+                            .enter()
+                            .append("rect")
+                            .attr("x", d => xScale(new Date(d[0])))
+                            .attr("y", d => yScale(d[1])) 
+                            .attr("width", (w - padding * 2) / dataset.length) 
+                            .attr("height", d => (h - yScale(d[1])) - padding)
+                            .attr("fill", "#3AAFA9")
+                            .attr("class", "us_gdp_bar")
+                            .attr("data-date", d => d[0])
+                            .attr("data-gdp", d => d[1])
+                            .on("mouseover", d => {
+                                toolTip.html(`${handleTime(d[0])}<br>$${parseFloat(d[1]).toLocaleString('en')} Billion`)
+                                    .attr("data-date", d[0])
+                                    .style("left",`${d3.event.pageX}px`)
+                                    .style("visibility", "visible");
+                            })
+                            .on("mouseout", d => {
+                                toolTip.style("visibility", "hidden");
+                            });
+                            
+                        // Axis
+                        const xAxis = d3.axisBottom(xScale)
+                        const yAxis = d3.axisLeft(yScale)
+
+                        svg.append("g")
+                            .attr("transform", "translate(0," + (h - padding) + ")")
+                            .call(xAxis)
+                            .attr("id", "x-axis")
+
+                        svg.append("g")
+                            .attr("transform", "translate(" + padding + ",0)")
+                            .call(yAxis)
+                            .attr("id", "y-axis")
+
+                        // Left Axis Legend 
+                        svg.append("text")
+                            .attr("text-anchor", "start")
+                            .attr("transform", "translate("+ (padding * 1.5) +","+(h/1.9)+")rotate(-90)")
+                            .text("Gross Domestic Product")
+                            .attr("fill", "#2B7A78")
+                    
+                    })
+            })
+            </script>
+    </body>
+</html>

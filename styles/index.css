@@ -1,0 +1,37 @@
+@import url("bar_chart.css");
+@import url("scatterplot_graph.css");
+
+/* Variables */
+
+body {
+    --black: #17252A;
+    --dark_green: #2B7A78;
+    --green: #3AAFA9;
+    --grey: #DEF2F1;
+   
+}
+
+
+header {
+    position: fixed;
+    top: 0;
+    background: rgb(43,122,120);
+    background: linear-gradient(90deg, rgba(43,122,120,1) 0%, rgba(58,175,169,1) 100%);
+    width: 100vw;
+    height: 70px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+.header_link {
+    color: white;
+    text-decoration: none;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.header_link:hover {
+    opacity: 0.8;
+}
