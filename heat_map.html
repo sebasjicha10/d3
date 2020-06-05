@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Land-Surface Temperature</title>
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- D3 -->
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+
+        <!-- CSS -->
+        <link rel="stylesheet" type="text/css" href="styles/index.css">
+
+    </head>
+    <body id="heat_map_body">
+        <header>
+            <a class="header_link" href="./bar_chart.html">USA GDP</a>
+            <a class="header_link" href="./scatterplot_graph.html">Bicycle Racing Doping</a>
+            <a class="header_link" href="./heat_map.html">Land-Surface Temperature</a>
+            <a class="header_link" href="./bar_chart.html">USA GDP</a>
+            <a class="header_link" href="./bar_chart.html">USA GDP</a>
+        </header>
+        <div id="d3_section">
+            <img src="https://raw.githubusercontent.com/d3/d3-logo/6d9c471aa852033501d00ca63fe73d9f8be82d1d/d3.svg" id="d3_title" alt="D3 logo">
+        </div>
+        <h6>by Sebastian Jimenez</h6>
+            <div id="container"></div>
+            <script>
+                document.addEventListener("DOMContentLoaded", () => {
+                    // Fetch Data
+                    let dataset = []
+                    fetch("https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json")
+                        .then(response => response.json())
+                        .then(data => {
+                            data["monthlyVariance"].forEach(el => {
+                                dataset.push(el)
+                            })
+
+                            // Data Visualization
+                            // Variables
+                            const w = 1200
+                            const h = 460
+                            const padding = 60
+                            const month = ["","January", "February", "March", "April", "May", "June", 
+           "July", "August", "September", "October", "November", "December"]
+
+                            
+                            // Handles the info displayed in the tooltip
+                            const handleToolTip = cell => {
+                                const variance = cell["variance"]
+                                const base_temp = 8.66
+                                const sum = variance + base_temp
+                                const year = cell["year"]
+                                const month_str = month[cell["month"]]
+                                const handleSign = num => {
+                                    if (num > 0) {
+                                        return "+" + num
+                                    } return num
+                                 }
+                                return `${year} - ${month_str}<br>${sum.toFixed(1)}℃<br>${handleSign(variance.toFixed(1))}℃`
+                            }
+
+                            // Scales 
+                            // X Axis Format
+                            const yearFormat = "%Y"
+                            const xScale = d3.scaleTime()
+                                .domain([d3.timeParse(yearFormat)(1753), d3.timeParse(yearFormat)(2015)])
+                                .range([padding, w - padding])
+
+                            // Y Axis Format
+                            const specifier = "%m"
+                            const yScale = d3.scaleTime()
+                                .domain([d3.timeParse(specifier)(12), d3.timeParse(specifier)(1)])
+                                .range([h - padding, padding])
+
+                            // Append SVG
+                            const svg = d3.select("#container")
+                                .append("svg")
+                                .attr("width", w)
+                                .attr("height", h)
+
+                            // Title
+                            svg.append("text")
+                                .attr("x", w / 2)
+                                .attr("y", padding - 40)
+                                .attr("text-anchor", "middle")  
+                                .attr("id", "title")
+                                .text("Monthly Global Land-Surface Temperature")
+                                .attr("fill", "#17252A")
+
+                            // Subtitle
+                            svg.append("text")
+                                .attr("x", w / 2)
+                                .attr("y", padding - 20)
+                                .attr("text-anchor", "middle")  
+                                .attr("id", "heat_subtitle")
+                                .text("1753 - 2015: base temperature 8.66℃")
+                                .attr("fill", "#2B7A78")
+
+                            // Tool Tip
+                            const toolTip = d3.select("#container")
+                                .append("div")
+                                .attr("id", "tooltip")
+                                .style("visibility", "hidden")
+
+                            // Rectangle
+                            svg.selectAll("rect")
+                                .data(dataset)
+                                .enter()
+                                .append("rect")
+                                .attr("class", "cell")
+                                .attr("x", d => xScale(d3.timeParse(yearFormat)(d["year"])))
+                                .attr("y", d => yScale(d3.timeParse(specifier)(d["month"])))
+                                .attr("width", (w - padding * 2) / 262) // REVISAR!!!!
+                                .attr("height", (h - padding * 2) / 10) // REVISAR !!!
+                                .on("mouseover", d => {
+                                    toolTip.html(`${handleToolTip(d)}`)
+                                        .attr("data-year", d["year"])
+                                        .style("left",`${d3.event.pageX - 35}px`)
+                                        .style("top",`${d3.event.pageY - 85}px`)
+                                        .style("visibility", "visible")
+                                    
+                                })
+                                .on("mouseout", d => {
+                                    toolTip.style("visibility", "hidden")
+                                })
+                                .attr("fill", d => {
+                                    const variance = d["variance"]
+                                    const base_temp = 8.66
+                                    const sum = variance + base_temp
+                                    // Fill rect according to heat 
+                                    switch (true) {
+                                        case (sum <= 2.8) :
+                                            return "#313695"
+                                            break
+                                        case (sum <= 3.9) :
+                                            return "#4575B4"
+                                            break
+                                        case (sum <= 5) :
+                                            return "#74ADD1"
+                                            break
+                                        case (sum <= 6.1) :
+                                            return "#ABD9E9"
+                                            break
+                                        case (sum <= 7.2) :
+                                            return "#E0F3F8"
+                                            break
+                                        case (sum <= 8.3) :
+                                            return "#FFFFBF"
+                                            break
+                                        case (sum <= 9.5) :
+                                            return "#FEE090"
+                                            break
+                                        case (sum <= 10.6) :
+                                            return "#FDAE61"
+                                            break
+                                        case (sum <= 11.7) :
+                                            return "#F46D43"
+                                            break
+                                        case (sum <= 12.8) :
+                                            return "#D73027"
+                                            break
+                                        case (sum > 12.8) :
+                                            return "#A50026"
+                                            break
+                                        default : 
+                                            return "#FFFFFF"
+                                            break
+                                    }
+                                })
+
+                            // Axis 
+                            const xAxis = d3.axisBottom(xScale)
+                            const yAxis = d3.axisLeft(yScale)
+                                .tickFormat((d,i) => {
+                                    const axisMonths = month.filter(el => el != "").reverse()
+                                    return axisMonths[i]
+                                })
+
+                            svg.append("g")
+                                .attr("transform", "translate(0," + (h - padding) + ")")
+                                .call(xAxis)
+
+                            svg.append("g")
+                                .attr("transform", "translate(" + padding + ",0)")
+                                .call(yAxis)
+
+
+                        })
+                })
+            </script>
+            <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+    </body>
+</html>

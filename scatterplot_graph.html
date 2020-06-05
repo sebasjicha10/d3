@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>United States GDP</title>
+        <title>Bicycle Racing Doping</title>
 
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -17,14 +17,17 @@
         <header>
             <a class="header_link" href="./bar_chart.html">USA GDP</a>
             <a class="header_link" href="./scatterplot_graph.html">Bicycle Racing Doping</a>
-            <a class="header_link" href="./bar_chart.html">USA GDP</a>
+            <a class="header_link" href="./heat_map.html">Land-Surface Temperature</a>
             <a class="header_link" href="./bar_chart.html">USA GDP</a>
             <a class="header_link" href="./bar_chart.html">USA GDP</a>
         </header>
+        <div id="d3_section">
+            <img src="https://raw.githubusercontent.com/d3/d3-logo/6d9c471aa852033501d00ca63fe73d9f8be82d1d/d3.svg" id="d3_title" alt="D3 logo">
+        </div>
+        <h6>by Sebastian Jimenez</h6>
             <div id="container"></div>
             <script>
             document.addEventListener("DOMContentLoaded", () => {
-
                 // Fetch data
                 let dataset = []
                 fetch("https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/cyclist-data.json")
@@ -40,6 +43,7 @@
                         const h = 460
                         const padding = 60
 
+                        // Tool Tip on hover for doping cases
                         const handleDoping = cyclist => {
                             const doping = cyclist["Doping"]
                             if (doping == "") {
@@ -51,7 +55,6 @@
                         // Scales
                         // X Axis Format
                         const yearFormat = "%Y"
-
                         const xScale = d3.scaleTime()
                             .domain([d3.timeParse(yearFormat)(1993), d3.timeParse(yearFormat)(2016)])
                             .range([padding, w - padding])
@@ -59,7 +62,6 @@
                         // Y Axis Format
                         const specifier = "%M:%S"
                         const parsedTime = dataset.map(d => d3.timeParse(specifier)(d["Time"]))
-
                         const yScale = d3.scaleTime()
                             .domain(d3.extent(parsedTime).reverse())
                             .range([h - padding, padding])
@@ -116,11 +118,11 @@
                                     .attr("data-year", d["Year"])
                                     .style("left",`${d3.event.pageX}px`)
                                     .style("top",`${d3.event.pageY}px`)
-                                    .style("visibility", "visible");
+                                    .style("visibility", "visible")
                             })
                             .on("mouseout", d => {
-                                toolTip.style("visibility", "hidden");
-                            });
+                                toolTip.style("visibility", "hidden")
+                            })
                             
 
                         // Axis
@@ -179,7 +181,6 @@
                             
                     })
             })
-
             </script>
     </body>
 </html>
