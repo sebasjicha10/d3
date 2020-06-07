@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>US Educational Attainment</title>
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- D3 -->
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+
+        <!-- CSS -->
+        <link rel="stylesheet" type="text/css" href="styles/index.css">
+
+        <!-- TopoJSON -->
+        <script src="https://unpkg.com/topojson@3"></script>
+
+    </head>
+    <body id="education_body">
+        <header>
+            <a class="header_link" href="./bar_chart.html">US GDP</a>
+            <a class="header_link" href="./scatterplot_graph.html">Bicycle Racing Doping</a>
+            <a class="header_link" href="./heat_map.html">Land-Surface Temperature</a>
+            <a class="header_link" href="./education.html">US Education</a>
+            <a class="header_link" href="./bar_chart.html">USA GDP</a>
+        </header>
+        <div id="d3_section">
+            <img src="https://raw.githubusercontent.com/d3/d3-logo/6d9c471aa852033501d00ca63fe73d9f8be82d1d/d3.svg" id="d3_title" alt="D3 logo">
+        </div>
+        <h6>by Sebastian Jimenez</h6>
+        <h1 id="education_title">United States Educational Attainment</h1>
+        <h2 id="education_description">Percentage of adults age 25 and older with a bachelor's degree or higher (2010-2014)</h2>
+        <div id="container"></div>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                // Fetch US Eduction Data
+                let dataset = []
+                fetch("https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/for_user_education.json")
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(el => {
+                            dataset.push(el)
+                        })
+
+                        // Variables
+                        const w = 960
+                        const h = 600
+                        const percents = []
+                        const edu = []
+                        const short_edu = []
+
+                        dataset.forEach(county => {
+                            short_edu[county.fips]=county.area_name+', '+county.state+': '+county.bachelorsOrHigher+'%'
+                            percents.push(county.bachelorsOrHigher)
+                            edu[county.fips]=county.bachelorsOrHigher
+                        })
+
+                        const minPercent = d3.min(percents)
+                        const maxPercent = d3.max(percents)
+
+                        const colorCodes = ['#f1f9f0', '#C7E7DF', '#9ED6CE', '#56B9B2', '#38A7A1', '#2C8883', '#1B6361', '#041D1C']
+                        
+                        // Quantiles
+                        const myColor = d3.scaleQuantile()
+                            .domain([minPercent, maxPercent])
+                            .range(colorCodes)
+
+                        const colorQuantiles = myColor.quantiles()
+                        colorQuantiles.unshift(0)
+                        
+                        // SVG
+                        const path = d3.geoPath()
+                        const svg = d3.select("#container")
+                            .append("svg")
+                            .attr("width", w)
+                            .attr("height", h)
+
+                        // County Data 
+                        const source = "https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/counties.json"
+                        d3.json(source)
+                            .then(us => {
+                                // Draw counties 
+                                svg.append("g")
+                                    .attr("class", "counties")
+                                    .selectAll("path")
+                                    .data(topojson.feature(us, us.objects.counties).features)
+                                    .enter()
+                                    .append("path")
+                                    .attr("class", "county")
+                                    .attr("d", path)
+                                    .attr("data-fips", d => d.id)
+                                    .attr("data-education", d => edu[d.id])
+                                    .style("fill", d => myColor(edu[d.id]))
+                                    .on("mouseover", (d,i) => {
+                                        toolTip.html(short_edu[d.id])
+                                        .attr("data-education", edu[d.id])
+                                        .style("left",`${d3.event.pageX + 20}px`)
+                                        .style("top",`${d3.event.pageY - 40}px`)
+                                        .style("visibility", "visible")
+                                    })
+                                    .on("mouseout", d => {
+                                        toolTip.style("visibility", "hidden")
+                                    })
+
+                                // Draw the States
+                                svg.append("path")
+                                    .datum(topojson.mesh(us, us.objects.states, (a,b) => {
+                                        return a.id !== b.id
+                                    }))
+                                    .attr("class", "education_states")
+                                    .attr("d", path)
+
+                                // Color Key Code Legend
+                                const legend = svg.selectAll(".legend")
+                                    .data(colorQuantiles)
+                                    .enter()
+                                    .append("g")
+                                    .attr("id", "education_legend")
+                                    .attr("font-size", "12px")
+                                    .attr("font-style", "Roboto")
+                                    .attr("transform", (d,i) => {
+                                        return "translate(" + i * 30 + ",0)"
+                                    })
+
+                                // Draw color codes
+                                legend.append("rect")
+                                    .attr("x", (d,i) => w/2 + i + 130)
+                                    .attr("y", 35)
+                                    .attr("width", 30)
+                                    .attr("height", 15)
+                                    .style("fill", (d,i) => colorCodes[i])
+
+                                // Draw Ticks
+                                legend.append("rect")
+                                    .attr("x", (d,i) => w/2 + i + 130)
+                                    .attr("y", 50)
+                                    .attr("width", 1)
+                                    .attr("height", 5)
+
+                                // Color Value Range
+                                legend.append("text")
+                                    .attr('x', (d,i) => w/2+(i+1)+130)
+                                    .attr("y", 68)
+                                    .text((d,i) => {
+                                        return colorQuantiles[i].toFixed(1)
+                                    })
+                                    .style("text-anchor", "middle")
+                            })
+
+                        // Tool Tip
+                        const toolTip = d3.select("#container")
+                            .append("div")
+                            .attr("id", "education_tooltip")
+                            .style("visibility", "hidden")
+                    })
+            })
+
+        </script>
+    </body>
+</html>

@@ -1,6 +1,7 @@
 @import url("bar_chart.css");
 @import url("scatterplot_graph.css");
 @import url("heat_map.css");
+@import url("education.css");
 
 /* Variables */
 
@@ -33,6 +34,7 @@ header {
 
 .header_link:hover {
     opacity: 0.8;
+    text-decoration: underline;
 }
 
 #d3_section {
@@ -43,9 +45,15 @@ header {
     text-align: center;
 }
 
+#container {
+    display: flex;
+    flex-direction: column;
+}
+
 #d3_title {
     height: 100%;
 }
+
  h6 {
     position: fixed;
     bottom: 0;

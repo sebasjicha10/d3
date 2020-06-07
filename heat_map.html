@@ -15,187 +15,187 @@
     </head>
     <body id="heat_map_body">
         <header>
-            <a class="header_link" href="./bar_chart.html">USA GDP</a>
+            <a class="header_link" href="./bar_chart.html">US GDP</a>
             <a class="header_link" href="./scatterplot_graph.html">Bicycle Racing Doping</a>
             <a class="header_link" href="./heat_map.html">Land-Surface Temperature</a>
-            <a class="header_link" href="./bar_chart.html">USA GDP</a>
+            <a class="header_link" href="./education.html">US Education</a>
             <a class="header_link" href="./bar_chart.html">USA GDP</a>
         </header>
         <div id="d3_section">
             <img src="https://raw.githubusercontent.com/d3/d3-logo/6d9c471aa852033501d00ca63fe73d9f8be82d1d/d3.svg" id="d3_title" alt="D3 logo">
         </div>
         <h6>by Sebastian Jimenez</h6>
-            <h1 id="heat_title">Monthly Global Land-Surface Temperature</h1>
-            <h2 id="heat_description">1753 - 2015: base temperature 8.66℃"</h2>
-            <div id="container"></div>
-            <script>
-                document.addEventListener("DOMContentLoaded", () => {
-                    // Fetch Data
-                    let dataset = []
-                    fetch("https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json")
-                        .then(response => response.json())
-                        .then(data => {
-                            data["monthlyVariance"].forEach(el => {
-                                dataset.push(el)
+        <h1 id="heat_title">Monthly Global Land-Surface Temperature</h1>
+        <h2 id="heat_description">1753 - 2015: base temperature 8.66℃"</h2>
+        <div id="container"></div>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                // Fetch Data
+                let dataset = []
+                fetch("https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json")
+                    .then(response => response.json())
+                    .then(data => {
+                        data["monthlyVariance"].forEach(el => {
+                            dataset.push(el)
+                        })
+
+                        // Data Visualization
+                        // Variables
+                        const w = 1200
+                        const h = 460
+                        const padding = 60
+                        const month = ["","January", "February", "March", "April", "May", "June", 
+        "July", "August", "September", "October", "November", "December"]
+
+                        // Handles the info displayed in the tooltip
+                        const handleToolTip = cell => {
+                            const variance = cell["variance"]
+                            const base_temp = 8.66
+                            const sum = variance + base_temp
+                            const year = cell["year"]
+                            const month_str = month[cell["month"]]
+                            const handleSign = num => {
+                                if (num > 0) {
+                                    return "+" + num
+                                } return num
+                                }
+                            return `${year} - ${month_str}<br>${sum.toFixed(1)}℃<br>${handleSign(variance.toFixed(1))}℃`
+                        }
+
+                        // Scales 
+                        // X Axis Format
+                        const yearFormat = "%Y"
+                        const xScale = d3.scaleTime()
+                            .domain([d3.timeParse(yearFormat)(1753), d3.timeParse(yearFormat)(2015)])
+                            .range([padding, w - padding])
+
+                        // Y Axis Format
+                        const specifier = "%m"
+                        const yScale = d3.scaleTime()
+                            .domain([d3.timeParse(specifier)(12), d3.timeParse(specifier)(1)])
+                            .range([h - padding, padding])
+
+                        // Append SVG
+                        const svg = d3.select("#container")
+                            .append("svg")
+                            .attr("width", w)
+                            .attr("height", h)
+
+                        // Tool Tip
+                        const toolTip = d3.select("#container")
+                            .append("div")
+                            .attr("id", "heat_tooltip")
+                            .style("visibility", "hidden")
+
+                        // Rectangle
+                        svg.selectAll("rect")
+                            .data(dataset)
+                            .enter()
+                            .append("rect")
+                            .attr("class", "heat_cell")
+                            .attr("x", d => xScale(d3.timeParse(yearFormat)(d["year"])))
+                            .attr("y", d => yScale(d3.timeParse(specifier)(d["month"])) - 32)
+                            .attr("width", (w - padding * 2) / 250)
+                            .attr("height", (h - padding * 2) / 10.5)
+                            .attr("data-month", d => d["month"] - 1)
+                            .attr("data-year", d => d["year"])
+                            .attr("data-temp", d => d["variance"])
+                            .on("mouseover", d => {
+                                toolTip.html(`${handleToolTip(d)}`)
+                                    .attr("data-year", d["year"])
+                                    .style("left",`${d3.event.pageX - 40}px`)
+                                    .style("top",`${d3.event.pageY - 85}px`)
+                                    .style("visibility", "visible")
+                                
                             })
-
-                            // Data Visualization
-                            // Variables
-                            const w = 1200
-                            const h = 460
-                            const padding = 60
-                            const month = ["","January", "February", "March", "April", "May", "June", 
-           "July", "August", "September", "October", "November", "December"]
-
-                            // Handles the info displayed in the tooltip
-                            const handleToolTip = cell => {
-                                const variance = cell["variance"]
+                            .on("mouseout", d => {
+                                toolTip.style("visibility", "hidden")
+                            })
+                            .attr("fill", d => {
+                                const variance = d["variance"]
                                 const base_temp = 8.66
                                 const sum = variance + base_temp
-                                const year = cell["year"]
-                                const month_str = month[cell["month"]]
-                                const handleSign = num => {
-                                    if (num > 0) {
-                                        return "+" + num
-                                    } return num
-                                 }
-                                return `${year} - ${month_str}<br>${sum.toFixed(1)}℃<br>${handleSign(variance.toFixed(1))}℃`
-                            }
+                                const color =
+                                    (sum <= 2.8) ? "#313695" : 
+                                    (sum <= 3.9) ? "#4575B4" :
+                                    (sum <= 5) ? "#74ADD1" :
+                                    (sum <= 6.1) ? "#ABD9E9" :
+                                    (sum <= 7.2) ? "#E0F3F8" :
+                                    (sum <= 8.3) ? "#FFFFBF" :
+                                    (sum <= 9.5) ? "#FEE090" :
+                                    (sum <= 10.6) ? "#FDAE61" :
+                                    (sum <= 11.7) ? "#F46D43" :
+                                    (sum <= 12.8) ? "#D73027" :
+                                    (sum > 12.8) ? "#A50026" :
+                                    "#FFFFFF"
+                                return color
+                            })
 
-                            // Scales 
-                            // X Axis Format
-                            const yearFormat = "%Y"
-                            const xScale = d3.scaleTime()
-                                .domain([d3.timeParse(yearFormat)(1753), d3.timeParse(yearFormat)(2015)])
-                                .range([padding, w - padding])
+                        // Axis 
+                        const xAxis = d3.axisBottom(xScale)
+                            .ticks(26)
+                        const yAxis = d3.axisLeft(yScale)
+                            .tickFormat((d,i) => {
+                                const axisMonths = month.filter(el => el != "").reverse()
+                                return axisMonths[i]
+                            })
 
-                            // Y Axis Format
-                            const specifier = "%m"
-                            const yScale = d3.scaleTime()
-                                .domain([d3.timeParse(specifier)(12), d3.timeParse(specifier)(1)])
-                                .range([h - padding, padding])
+                        svg.append("g")
+                            .attr("transform", "translate(0," + (h - padding) + ")")
+                            .call(xAxis)
+                            .attr("id", "x-axis")
 
-                            // Append SVG
-                            const svg = d3.select("#container")
-                                .append("svg")
-                                .attr("width", w)
-                                .attr("height", h)
+                        svg.append("g")
+                            .attr("transform", "translate(" + padding + ",-15)")
+                            .call(yAxis)
+                            .attr("id", "y-axis")
 
-                            // Tool Tip
-                            const toolTip = d3.select("#container")
-                                .append("div")
-                                .attr("id", "heat_tooltip")
-                                .style("visibility", "hidden")
+                        // Legend
+                        const legend_dataset = [2.8, 3.9, 5.0, 6.1, 7.2, 8.3, 9.5, 10.6, 11.7, 12.8]
 
-                            // Rectangle
-                            svg.selectAll("rect")
-                                .data(dataset)
-                                .enter()
-                                .append("rect")
-                                .attr("class", "heat_cell")
-                                .attr("x", d => xScale(d3.timeParse(yearFormat)(d["year"])))
-                                .attr("y", d => yScale(d3.timeParse(specifier)(d["month"])) - 32)
-                                .attr("width", (w - padding * 2) / 250)
-                                .attr("height", (h - padding * 2) / 10.5)
-                                .attr("data-month", d => d["month"] - 1)
-                                .attr("data-year", d => d["year"])
-                                .attr("data-temp", d => d["variance"])
-                                .on("mouseover", d => {
-                                    toolTip.html(`${handleToolTip(d)}`)
-                                        .attr("data-year", d["year"])
-                                        .style("left",`${d3.event.pageX - 40}px`)
-                                        .style("top",`${d3.event.pageY - 85}px`)
-                                        .style("visibility", "visible")
-                                    
-                                })
-                                .on("mouseout", d => {
-                                    toolTip.style("visibility", "hidden")
-                                })
-                                .attr("fill", d => {
-                                    const variance = d["variance"]
-                                    const base_temp = 8.66
-                                    const sum = variance + base_temp
-                                    const color =
-                                        (sum <= 2.8) ? "#313695" : 
-                                        (sum <= 3.9) ? "#4575B4" :
-                                        (sum <= 5) ? "#74ADD1" :
-                                        (sum <= 6.1) ? "#ABD9E9" :
-                                        (sum <= 7.2) ? "#E0F3F8" :
-                                        (sum <= 8.3) ? "#FFFFBF" :
-                                        (sum <= 9.5) ? "#FEE090" :
-                                        (sum <= 10.6) ? "#FDAE61" :
-                                        (sum <= 11.7) ? "#F46D43" :
-                                        (sum <= 12.8) ? "#D73027" :
-                                        (sum > 12.8) ? "#A50026" :
-                                        "#FFFFFF"
-                                    return color
-                                })
+                        const legend = d3.select("#container")
+                            .append("svg")
+                            .attr("width", w)
+                            .attr("height", 50)
+                            .attr("id", "legend")
 
-                            // Axis 
-                            const xAxis = d3.axisBottom(xScale)
-                                .ticks(26)
-                            const yAxis = d3.axisLeft(yScale)
-                                .tickFormat((d,i) => {
-                                    const axisMonths = month.filter(el => el != "").reverse()
-                                    return axisMonths[i]
-                                })
+                        // Legend squares
+                        legend.selectAll("rect")
+                            .data(legend_dataset)
+                            .enter()
+                            .append("rect")
+                            .attr("x", (d,i) => (w/2 - 150) + i * 30) 
+                            .attr("y", 0)
+                            .attr("width", 30) 
+                            .attr("height", 30)
+                            .attr("fill", d => {
+                                const color = 
+                                    (d==2.8) ? "#313695" : 
+                                    (d==3.9) ? "#4575B4" :
+                                    (d==5.0) ? "#74ADD1" :
+                                    (d==6.1) ? "#ABD9E9" :
+                                    (d==7.2) ? "#E0F3F8" :
+                                    (d==8.3) ? "#FFFFBF" :
+                                    (d==9.5) ? "#FEE090" :
+                                    (d==10.6) ? "#FDAE61" :
+                                    (d==11.7) ? "#F46D43" :
+                                    (d==12.8) ? "#D73027" :
+                                    "#FFFFFF"
+                                return color
+                            })
 
-                            svg.append("g")
-                                .attr("transform", "translate(0," + (h - padding) + ")")
-                                .call(xAxis)
-                                .attr("id", "x-axis")
-
-                            svg.append("g")
-                                .attr("transform", "translate(" + padding + ",-15)")
-                                .call(yAxis)
-                                .attr("id", "y-axis")
-
-                            // Legend
-                            const legend_dataset = [2.8, 3.9, 5.0, 6.1, 7.2, 8.3, 9.5, 10.6, 11.7, 12.8]
-
-                            const legend = d3.select("#container")
-                                .append("svg")
-                                .attr("width", w)
-                                .attr("height", 50)
-                                .attr("id", "legend")
-
-                            // Legend squares
-                            legend.selectAll("rect")
-                                .data(legend_dataset)
-                                .enter()
-                                .append("rect")
-                                .attr("x", (d,i) => (w/2 - 150) + i * 30) 
-                                .attr("y", 0)
-                                .attr("width", 30) 
-                                .attr("height", 30)
-                                .attr("fill", d => {
-                                    const color = 
-                                        (d==2.8) ? "#313695" : 
-                                        (d==3.9) ? "#4575B4" :
-                                        (d==5.0) ? "#74ADD1" :
-                                        (d==6.1) ? "#ABD9E9" :
-                                        (d==7.2) ? "#E0F3F8" :
-                                        (d==8.3) ? "#FFFFBF" :
-                                        (d==9.5) ? "#FEE090" :
-                                        (d==10.6) ? "#FDAE61" :
-                                        (d==11.7) ? "#F46D43" :
-                                        (d==12.8) ? "#D73027" :
-                                        "#FFFFFF"
-                                    return color
-                                })
-
-                            // Legend numbers
-                            legend.selectAll("text")
-                                .data(legend_dataset)
-                                .enter()
-                                .append("text")
-                                .text(d => (d < 12) ? d.toFixed(1) : null)
-                                .attr("x", (d,i) => (w/2 - 130) + i * 30)
-                                .attr("y", 45)
-                                .attr("fill", "black")
-                                .attr("class", "heat_legend_number")
-                        })
-                })
-            </script>
+                        // Legend numbers
+                        legend.selectAll("text")
+                            .data(legend_dataset)
+                            .enter()
+                            .append("text")
+                            .text(d => (d < 12) ? d.toFixed(1) : null)
+                            .attr("x", (d,i) => (w/2 - 130) + i * 30)
+                            .attr("y", 45)
+                            .attr("fill", "black")
+                            .attr("class", "heat_legend_number")
+                    })
+            })
+        </script>
     </body>
 </html>
