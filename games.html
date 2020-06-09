@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Video Game Sales</title>
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- D3 -->
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+
+        <!-- CSS -->
+        <link rel="stylesheet" type="text/css" href="styles/index.css">
+    </head>
+    <body id="games_body">
+        <header>
+            <a class="header_link" href="./index.html">USA GDP</a>
+            <a class="header_link" href="./scatterplot_graph.html">Bicycle Racing Doping</a>
+            <a class="header_link" href="./heat_map.html">Land-Surface Temperature</a>
+            <a class="header_link" href="./education.html">US Education</a>
+            <a class="header_link" href="./games.html">Video Game Sales</a>
+        </header>
+        <div id="d3_section">
+            <img src="https://raw.githubusercontent.com/d3/d3-logo/6d9c471aa852033501d00ca63fe73d9f8be82d1d/d3.svg" id="d3_title" alt="D3 logo">
+        </div>
+        <h6>by Sebastian Jimenez</h6>
+        <h1 id="title">Video Game Sales</h1>
+        <h2 id="description">Top 100 Most Sold Video Games Grouped by Platform</h2>
+        <div id="container"></div>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                // Fetch Data
+                let dataset = []
+                fetch("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json")
+                    .then(response => response.json())
+                    .then(data => {
+                        dataset = data
+
+                        // Variables 
+                        const w = 960
+                        const h = 600
+
+                        // SVG
+                        const svg = d3.select("#container")
+                            .append("svg")
+                            .attr("width", w)
+                            .attr("height", h)
+
+                        // Colors
+                        const palette = ["#4C92C3", "#BED2ED", "#FF993E", "#FFC993", "#56B356", "#ADE5A1", "#DE5253", "#FFADAB", "#A985CA", "#D1C0DD", "#A3786F", "#E992CE", "#F9C5DB", "#D0B0A9", "#999999", "#D2D2D2", "#C9CA4E", "#E2E2A4"]
+                        const colors  = color => d3.interpolateRgb(color, "#ffffff")(0)
+                        const color = d3.scaleOrdinal(palette.map(colors))
+
+                        // Treemap
+                        const treemap = d3.treemap()
+                            .size([w, h])
+                            .paddingInner(1)
+
+                        const root = d3.hierarchy(dataset).eachBefore(d => {
+                                d.data.id = (d.parent ? d.parent.data.id + "." : "") + d.data.name; 
+                            })
+                            .sum(d => d.value)
+                            .sort((a, b) => b.height - a.height || b.value - a.value);
+
+                            treemap(root)
+
+                        // Cells
+                        const cell = svg.selectAll("g")
+                            .data(root.leaves())
+                            .enter()
+                            .append("g")
+                            .attr("class", "group")
+                            .attr("transform", d => `translate(${d.x0}, ${d.y0} )`)
+
+                        cell.append("rect")
+                            .attr("id", d => d.data.id)
+                            .attr("class", "tile")
+                            .attr("width", d => d.x1 - d.x0)
+                            .attr("height", d => d.y1 - d.y0)
+                            .attr("data-name", d =>d.data.name)
+                            .attr("data-category", d =>d.data.category)
+                            .attr("data-value", d => d.data.value)
+                            .attr("fill", d => color(d.data.category))
+
+                        cell.append("text")
+                            .attr('class', 'tile-text')
+                            .selectAll("tspan")
+                            .data(d => d.data.name.split(/(?=[A-Z][^A-Z])/g))
+                            .enter().append("tspan")
+                            .attr("x", 4)
+                            .attr("y", (d, i) => 13 + i * 12)
+                            .text(d => d)
+                            .style("font-size", "10px")
+    
+                        // Tootip
+                        const tootip = d3.select("container")
+                            .append("div")
+                            .attr("id", "tooltip")
+                            .style("visibility", "hidden")
+                    })
+
+            })
+        </script>
+        <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+
+    </body>
+</html>
