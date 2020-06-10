@@ -50,7 +50,7 @@
                         const short_edu = []
 
                         dataset.forEach(county => {
-                            short_edu[county.fips]=county.area_name+', '+county.state+': '+county.bachelorsOrHigher+'%'
+                            short_edu[county.fips]=county.area_name+", "+county.state+": "+county.bachelorsOrHigher+"%"
                             percents.push(county.bachelorsOrHigher)
                             edu[county.fips]=county.bachelorsOrHigher
                         })
@@ -58,7 +58,7 @@
                         const minPercent = d3.min(percents)
                         const maxPercent = d3.max(percents)
 
-                        const colorCodes = ['#f1f9f0', '#C7E7DF', '#9ED6CE', '#56B9B2', '#38A7A1', '#2C8883', '#1B6361', '#041D1C']
+                        const colorCodes = ["#f1f9f0", "#C7E7DF", "#9ED6CE", "#56B9B2", "#38A7A1", "#2C8883", "#1B6361", "#041D1C"]
                         
                         // Quantiles
                         const myColor = d3.scaleQuantile()
@@ -139,7 +139,7 @@
 
                                 // Color Value Range
                                 legend.append("text")
-                                    .attr('x', (d,i) => w/2+(i+1)+130)
+                                    .attr("x", (d,i) => w/2+(i+1)+130)
                                     .attr("y", 68)
                                     .text((d,i) => {
                                         return colorQuantiles[i].toFixed(1)

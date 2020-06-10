@@ -24,9 +24,10 @@
             <img src="https://raw.githubusercontent.com/d3/d3-logo/6d9c471aa852033501d00ca63fe73d9f8be82d1d/d3.svg" id="d3_title" alt="D3 logo">
         </div>
         <h6>by Sebastian Jimenez</h6>
-        <h1 id="title">Video Game Sales</h1>
-        <h2 id="description">Top 100 Most Sold Video Games Grouped by Platform</h2>
+        <h1 id="games_title">Video Game Sales</h1>
+        <h2 id="games_description">Top 100 Most Sold Video Games Grouped by Platform</h2>
         <div id="container"></div>
+        <svg id="games_legend"></svg>
         <script>
             document.addEventListener("DOMContentLoaded", () => {
                 // Fetch Data
@@ -48,8 +49,7 @@
 
                         // Colors
                         const palette = ["#4C92C3", "#BED2ED", "#FF993E", "#FFC993", "#56B356", "#ADE5A1", "#DE5253", "#FFADAB", "#A985CA", "#D1C0DD", "#A3786F", "#E992CE", "#F9C5DB", "#D0B0A9", "#999999", "#D2D2D2", "#C9CA4E", "#E2E2A4"]
-                        const colors  = color => d3.interpolateRgb(color, "#ffffff")(0)
-                        const color = d3.scaleOrdinal(palette.map(colors))
+                        const color = d3.scaleOrdinal(palette)
 
                         // Treemap
                         const treemap = d3.treemap()
@@ -57,16 +57,16 @@
                             .paddingInner(1)
 
                         const root = d3.hierarchy(dataset).eachBefore(d => {
-                                d.data.id = (d.parent ? d.parent.data.id + "." : "") + d.data.name; 
-                            })
+                            d.data.id = (d.parent ? d.parent.data.id + "." : "") + d.data.name
+                        })
                             .sum(d => d.value)
-                            .sort((a, b) => b.height - a.height || b.value - a.value);
+                            .sort((a, b) => b.height - a.height || b.value - a.value)
 
-                            treemap(root)
+                        treemap(root)
 
                         // Cells
                         const cell = svg.selectAll("g")
-                            .data(root.leaves())
+                            .data(root.leaves()) // Group for each console
                             .enter()
                             .append("g")
                             .attr("class", "group")
@@ -77,13 +77,27 @@
                             .attr("class", "tile")
                             .attr("width", d => d.x1 - d.x0)
                             .attr("height", d => d.y1 - d.y0)
-                            .attr("data-name", d =>d.data.name)
-                            .attr("data-category", d =>d.data.category)
+                            .attr("data-name", d => d.data.name)
+                            .attr("data-category", d => d.data.category)
                             .attr("data-value", d => d.data.value)
                             .attr("fill", d => color(d.data.category))
+                            .on("mouseover", (d,i) => {
+                                toolTip.html(
+                                    "Name: " + d.data.name + 
+                                    "<br>Category: " + d.data.category + 
+                                    "<br>Value: " + d.data.value
+                                )
+                                .attr("data-value", d.data.value)
+                                .style("left",`${d3.event.pageX + 20}px`)
+                                .style("top",`${d3.event.pageY - 30}px`)
+                                .style("visibility", "visible")
+                            })
+                            .on("mouseout", d => {
+                                toolTip.style("visibility", "hidden")
+                            })
 
                         cell.append("text")
-                            .attr('class', 'tile-text')
+                            .attr("class", "tile-text")
                             .selectAll("tspan")
                             .data(d => d.data.name.split(/(?=[A-Z][^A-Z])/g))
                             .enter().append("tspan")
@@ -91,17 +105,39 @@
                             .attr("y", (d, i) => 13 + i * 12)
                             .text(d => d)
                             .style("font-size", "10px")
-    
+
+                        // Legend
+                        const categories = Array.from(new Set(root.leaves().map(elm => elm.data.category)))
+                        const legend = d3.select("#games_legend")
+                            .attr("with", w)
+
+                        const legendElm = legend.append("g")
+                            .attr("id", "games_legend")
+                            .attr("transform", "translate(" + 0 + "," + 0 + ")")
+                            .selectAll("g")
+                            .data(categories)
+                            .enter()
+                            .append("g")
+                            .attr("transform", (d, i) => "translate(" + i*(w/18)  + "," + 0  + ")")
+
+                        legendElm.append("rect")                              
+                            .attr("width", 15)                          
+                            .attr("height", 15)     
+                            .attr("class", "legend-item")                 
+                            .attr("fill", d => color(d))
+
+                        legendElm.append("text")                              
+                            .attr("x", 15 + 3)                          
+                            .attr("y", 15 + -2)                       
+                            .text(d => d)
+
                         // Tootip
-                        const tootip = d3.select("container")
+                        const toolTip = d3.select("#container")
                             .append("div")
-                            .attr("id", "tooltip")
+                            .attr("id", "games_tooltip")
                             .style("visibility", "hidden")
                     })
-
             })
         </script>
-        <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
-
     </body>
 </html>

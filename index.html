@@ -106,14 +106,14 @@
                             .attr("data-date", d => d[0])
                             .attr("data-gdp", d => d[1])
                             .on("mouseover", d => {
-                                toolTip.html(`${handleTime(d[0])}<br>$${parseFloat(d[1]).toLocaleString('en')} Billion`)
+                                toolTip.html(`${handleTime(d[0])}<br>$${parseFloat(d[1]).toLocaleString("en")} Billion`)
                                     .attr("data-date", d[0])
                                     .style("left",`${d3.event.pageX}px`)
-                                    .style("visibility", "visible");
+                                    .style("visibility", "visible")
                             })
                             .on("mouseout", d => {
-                                toolTip.style("visibility", "hidden");
-                            });
+                                toolTip.style("visibility", "hidden")
+                            })
                             
                         // Axis
                         const xAxis = d3.axisBottom(xScale)
